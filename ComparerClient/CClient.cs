@@ -175,11 +175,6 @@ namespace ComparerClient
         private void Timer_Tick(object sender, EventArgs e)
         {
             CompareTime = (int)stopwatch.Elapsed.TotalSeconds;
-
-            if (CompareCaseCount == 0)
-            {
-                CompareFinish();
-            }
         }
 
         readonly object locker = new object();
@@ -204,6 +199,9 @@ namespace ComparerClient
                 OnPropertyChanged(nameof(CompareCaseCount));
             }
         }
+
+        CancellationTokenSource cancelTokenSource;
+
         public void StartCompare()
         {
             CompareState = "Starting...";
@@ -211,15 +209,14 @@ namespace ComparerClient
 
             if (Directory.Exists(CompareFolder))
             {
-                Task.Run(() =>
+                Task.Factory.StartNew(() =>
                 {
                     CompareInit();
 
+                    // find files to compare
                     var dir = new DirectoryInfo(CompareFolder);
-
                     var list = dir.GetFiles().ToList();
                     List<FileInfo> files = new List<FileInfo>();
-
                     foreach (var file in list)
                     {
                         switch (file.Extension)
@@ -233,8 +230,8 @@ namespace ComparerClient
                         }
                     }
 
+                    // calculate case count
                     CompareCaseCount = 0;
-
                     for (int i = 0; i < files.Count - 1; i++)
                     {
                         CompareCaseCount += files.Count - (i + 1);
@@ -242,10 +239,16 @@ namespace ComparerClient
 
                     CompareThread = 0;
 
+                    List<Task> tasks = new List<Task>();
+                    cancelTokenSource = new CancellationTokenSource();
+                    CancellationToken token = cancelTokenSource.Token;
+                    var factory = new TaskFactory(token);
+
                     for (int i = 0; i < files.Count - 1; i++)
                     {
                         // avoid too long progress
-                        Task.Factory.StartNew((object idx) =>
+                        // 
+                        var compareTask = factory.StartNew((object idx) =>
                         {
                             int idx1 = (int)idx;
                             // wait more thread start
@@ -293,6 +296,7 @@ namespace ComparerClient
                                 }
                             };
 
+                            // start compare
                             for (int j = idx1 + 1; j < files.Count; j++)
                             {
                                 var curPair = new Tuple<int, int>(idx1, j);
@@ -302,7 +306,7 @@ namespace ComparerClient
                                     if(CompareThread < maxThreadCount)
                                     {
                                         //var task = Task.Factory.StartNew(Compare, curPair, FullPowerCompare ? TaskCreationOptions.LongRunning : TaskCreationOptions.None);
-                                        Task.Factory.StartNew(Compare, curPair);
+                                        factory.StartNew(Compare, curPair);
                                         Thread.Sleep(CompareThread > maxThreadCount ? CompareThread * 50 : 250);
                                     }
                                     else
@@ -316,6 +320,7 @@ namespace ComparerClient
                                     Compare(curPair);
                                     watch.Stop();
 
+                                    // use multi-compare if file size > 1024*4 kb && a compare progress > 50*thread seconds
                                     if (files[idx1].Length >= 1024 * 4 && watch.ElapsedMilliseconds >= 50 * CompareThread)
                                     {
                                         //Console.WriteLine("{0} Use Multi-Compare({1}).", files[idx1].Name, watch.Elapsed.TotalSeconds);
@@ -331,15 +336,38 @@ namespace ComparerClient
                                         afterWaiting = true;
                                     }
                                 }
+
+                                if (cancelTokenSource.IsCancellationRequested)
+                                {
+                                    return;
+                                }
                             }
 
                             CompareState = files[idx1].Name + " exit.";
                         }, i, FullPowerCompare ? TaskCreationOptions.LongRunning : TaskCreationOptions.None);
 
+                        tasks.Add(compareTask);
                         Thread.Sleep(1);
                     }
-                }
-                );
+
+                    try
+                    { // wait all thread exit or cancel them
+                        Task.WaitAll(tasks.ToArray(), token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        CompareState = "Stopping...";
+                    }
+
+                    while (CompareThread > 0)
+                    { // wait all thread exit
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                    }
+
+                    cancelTokenSource.Dispose();
+                    CompareFinish();
+                    // Create new thread for Compare Manager
+                }, TaskCreationOptions.LongRunning);
             }
             else
             {
@@ -365,6 +393,11 @@ namespace ComparerClient
             CCore.ignoreCommend = IgnoreCommend;
             CCore.ignoreRedundancy = IgnoreRedundancy;
             CCore.suspectedSim = SuspectedSim;
+        }
+
+        public void StopCompare()
+        {
+            cancelTokenSource?.Cancel();
         }
     }
 }
