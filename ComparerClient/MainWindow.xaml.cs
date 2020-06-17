@@ -71,5 +71,10 @@ namespace ComparerClient
         {
             comparerClient.StopCompare();
         }
+
+        private void Export_Click(object sender, RoutedEventArgs e)
+        {
+            comparerClient.ExportResult();
+        }
     }
 }

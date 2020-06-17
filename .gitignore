@@ -4,7 +4,7 @@
 
 /.vs/CppFileComparer
 /ComparerClient/bin
-/ComparerClient/Properties/AssemblyInfo.cs
 /ComparerClient/obj
 /ComparerCore/bin
 /ComparerCore/obj
+/CppFileComparer.zip

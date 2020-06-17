@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ComparerClient"
         mc:Ignorable="d"
-        Title="Comparer" Height="616.953" Width="949.223">
+        Title="Comparer" Height="616.953" Width="949.223" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         <Canvas HorizontalAlignment="Left" Height="199" Margin="674,52,0,0" VerticalAlignment="Top" Width="257">
             <CheckBox Content="Ignore Commend" HorizontalAlignment="Left" VerticalAlignment="Top" Width="129" Canvas.Top="36" IsChecked="{Binding IgnoreCommend}"/>
@@ -21,8 +21,8 @@
             <Button Content="..." Canvas.Left="435" Canvas.Top="31" Width="21" Height="23" Click="SelectFolderButton_Click"/>
             <Label Content="Folder" Canvas.Left="9" Canvas.Top="1" Width="191"/>
         </Canvas>
-        <Canvas HorizontalAlignment="Left" Height="382" Margin="38,165,0,0" VerticalAlignment="Top" Width="495">
-            <ListView HorizontalAlignment="Left" Height="322" VerticalAlignment="Top" Width="480" Canvas.Left="5" Canvas.Top="50" SelectionMode="Single" AutomationProperties.IsRowHeader="True"
+        <Canvas HorizontalAlignment="Left" Height="382" Margin="38,165,0,0" VerticalAlignment="Top" Width="534">
+            <ListView HorizontalAlignment="Left" Height="322" VerticalAlignment="Top" Width="519" Canvas.Left="5" Canvas.Top="50" SelectionMode="Single" AutomationProperties.IsRowHeader="True"
                       ItemsSource="{Binding CompareInfos}" GridViewColumnHeader.Click="ColumnHeader_Click">
                 <ListView.View>
                     <GridView>
@@ -32,17 +32,18 @@
                     </GridView>
                 </ListView.View>
             </ListView>
-            <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="{Binding CompareState}" Canvas.Top="10" Width="475" Height="35"/>
+            <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="{Binding CompareState}" Canvas.Top="10" Width="514" Height="35"/>
         </Canvas>
         <Canvas HorizontalAlignment="Left" Height="273" Margin="674,274,0,0" VerticalAlignment="Top" Width="205">
-            <Button Content="Compare" Width="75" Canvas.Left="10" Canvas.Top="213" Click="Compare_Click" IsEnabled="{Binding IsNotComparing}" Height="25"/>
+            <Button Content="Compare" Width="75" Canvas.Left="10" Canvas.Top="116" Click="Compare_Click" IsEnabled="{Binding IsNotComparing}" Height="25"/>
             <Label Content="{Binding CompareTime}" Canvas.Left="52" Canvas.Top="75" Width="75" Height="25"/>
             <Label Content="Secs :" Canvas.Left="10" Canvas.Top="75"/>
             <Label Content="{Binding CompareCaseCount}" Canvas.Left="52" Canvas.Top="45" Width="75" Height="25"/>
             <Label Content="Rest :" Canvas.Left="10" Canvas.Top="45"/>
             <Label Content="{Binding CompareThread}" Canvas.Left="67" Canvas.Top="15" Width="75" Height="25"/>
             <Label Content="Thread :" Canvas.Left="11" Canvas.Top="15"/>
-            <Button Content="Stop" Width="75" Canvas.Left="109" Canvas.Top="213" Click="Stop_Click" Height="25"/>
+            <Button Content="Stop" Width="75" Canvas.Left="109" Canvas.Top="116" Click="Stop_Click" Height="25"/>
+            <Button Content="Export" Width="75" Canvas.Left="10" Canvas.Top="224" Click="Export_Click" Height="25"/>
         </Canvas>
 
     </Grid>

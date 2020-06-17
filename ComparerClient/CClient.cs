@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using ComparerCore;
@@ -39,6 +40,7 @@ namespace ComparerClient
             stopwatch = new Stopwatch();
         }
 
+        #region Properties
 
         private double suspectedSim;
         public double SuspectedSim
@@ -139,6 +141,29 @@ namespace ComparerClient
                 OnPropertyChanged(nameof(CompareInfos));
             }
         }
+
+        int compareThread = 0;
+        public int CompareThread
+        {
+            get => compareThread;
+            set
+            {
+                compareThread = value;
+                OnPropertyChanged(nameof(CompareThread));
+            }
+        }
+
+        private int compareCaseCount;
+        public int CompareCaseCount
+        {
+            get => compareCaseCount;
+            set
+            {
+                compareCaseCount = value;
+                OnPropertyChanged(nameof(CompareCaseCount));
+            }
+        }
+        #endregion
         void AddInfo(CInfo info)
         {
             compareInfos.Add(info);
@@ -178,27 +203,6 @@ namespace ComparerClient
         }
 
         readonly object locker = new object();
-        int compareThread = 0;
-        public int CompareThread
-        {
-            get => compareThread;
-            set
-            {
-                compareThread = value;
-                OnPropertyChanged(nameof(CompareThread));
-            }
-        }
-
-        private int compareCaseCount;
-        public int CompareCaseCount
-        {
-            get => compareCaseCount;
-            set
-            {
-                compareCaseCount = value;
-                OnPropertyChanged(nameof(CompareCaseCount));
-            }
-        }
 
         CancellationTokenSource cancelTokenSource;
 
@@ -247,7 +251,6 @@ namespace ComparerClient
                     for (int i = 0; i < files.Count - 1; i++)
                     {
                         // avoid too long progress
-                        // 
                         var compareTask = factory.StartNew((object idx) =>
                         {
                             int idx1 = (int)idx;
@@ -398,6 +401,19 @@ namespace ComparerClient
         public void StopCompare()
         {
             cancelTokenSource?.Cancel();
+        }
+
+        public void ExportResult()
+        {
+            CompareState = "Exporting...";
+            if (CExporter.ExportAs(compareInfos, CExporter.ExportType.xls))
+            {
+                CompareState = "Export Succeed.";
+            }
+            else
+            {
+                CompareState = "Export Failed.";
+            }
         }
     }
 }
